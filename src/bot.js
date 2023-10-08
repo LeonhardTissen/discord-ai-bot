@@ -298,6 +298,7 @@ async function handleMessage(message) {
 		}, 7000);
 
 		let response;
+		const responseStartTime = performance.now();
 		try {
 			if (!initModel) {
 				if (useSystemMessage) {
@@ -334,6 +335,12 @@ async function handleMessage(message) {
 		typingInterval = null;
 
 		const responseText = response.map(e => e.response).filter(e => e != null).join("").trim();
+		const wordCount = responseText.split(' ').length;
+		const responseTimeSeconds = (performance.now() - responseStartTime) / 1000;
+		const responseTimeMinutes = responseTimeSeconds / 60;
+		const wordsPerMinute = wordCount / responseTimeMinutes;
+
+		console.log(`Generated ${wordCount} words in ${responseTimeSeconds} seconds. (${wordsPerMinute} WPM)`)
 
 		log(LogLevel.Debug, `Response: ${responseText}`);
 
