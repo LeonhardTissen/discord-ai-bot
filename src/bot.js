@@ -1,4 +1,4 @@
-import { Client, Events, GatewayIntentBits, MessageType, PermissionsBitField, Partials } from "discord.js";
+import { Client, Events, GatewayIntentBits, MessageType, PermissionsBitField, Partials, ActivityType } from "discord.js";
 import { Logger, LogLevel } from "meklog";
 import fs from "node:fs";
 import dotenv from "dotenv";
@@ -13,9 +13,14 @@ const channels = process.env.CHANNELS.split(",");
 
 const emojis = {
 	// Replace with your own emojis, remove if you don't want to use emojis
-	no: "<:no:1117767793157345301>",
-	yes: "<:yes:1117767791089561691>"
+	no: ":x:",
+	yes: ":white_check_mark:"
 };
+
+const options = {
+	num_predict: 180, // Amount of tokens to generate
+	temperature: 0.85 // Higher -> More creative responses
+}
 
 function emoji(e, message) {
 	if (typeof e == "string" && e.length > 0) {
@@ -62,7 +67,13 @@ const client = new Client({
 
 client.once(Events.ClientReady, async () => {
 	await client.guilds.fetch();
-	client.user.setPresence({ activities: [], status: "online" });
+	client.user.setPresence({
+		activities: [{
+			name: "Warze.org/llama",
+			type: ActivityType.Listening
+		}],
+		status: "online" 
+	});
 });
 
 const messages = {};
@@ -304,6 +315,7 @@ async function handleMessage(message) {
 			response = (await makeRequest("/api/generate", "post", {
 				model: useSystemMessage ? model : originalModel,
 				prompt: userInput,
+				options,
 				context
 			})).split("\n").filter(e => !!e).map(e => {
 				return JSON.parse(e);
@@ -325,11 +337,8 @@ async function handleMessage(message) {
 
 		log(LogLevel.Debug, `Response: ${responseText}`);
 
-		const prefix = messages[channelID].amount == 0 ?
-			`This is the beginning of the conversation, type "${message.guild ? `<@!${client.user.id}> ` : ""}.clear" to clear the conversation.\n` : "";
-
 		// reply (will automatically stop typing)
-		const responseMessages = splitText(`${prefix}${responseText}`, 2000).map(content => ({ content, embeds: [] }));
+		const responseMessages = splitText(responseText, 2000).map(content => ({ content, embeds: [] }));
 
 		const replyMessages = [];
 		for (let i = 0; i < responseMessages.length; ++i) {
