@@ -336,9 +336,9 @@ async function handleMessage(message) {
 
 		const responseText = response.map(e => e.response).filter(e => e != null).join("").trim();
 		const wordCount = responseText.split(' ').length;
-		const responseTimeSeconds = (performance.now() - responseStartTime) / 1000;
+		const responseTimeSeconds = Math.ceil((performance.now() - responseStartTime) / 1000);
 		const responseTimeMinutes = responseTimeSeconds / 60;
-		const wordsPerMinute = wordCount / responseTimeMinutes;
+		const wordsPerMinute = Math.floor(wordCount / responseTimeMinutes);
 
 		console.log(`Generated ${wordCount} words in ${responseTimeSeconds} seconds. (${wordsPerMinute} WPM)`)
 
